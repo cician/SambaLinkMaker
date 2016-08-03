@@ -13,7 +13,7 @@ For now I'm simply compiling from MonoDevelop. All dependencies are pulled from
 NuGet.
 
 # Compiling? What's that?
-Just grab the [latest binary release](/releases/latest).
+Just grab the [latest binary release](../../releases/latest).
 I develop and test SambaLinkMaker only on [K]Ubuntu Linux only.
 You'll still need to install the mono runtime.
     sudo apt-get install mono-runtime
