@@ -1,9 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SambaLinkMaker", "SambaLinkMaker.csproj", "{C2EE396E-2C69-4EC9-9805-294EF5C71725}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SambaLinkMaker", "SambaLinkMaker\SambaLinkMaker.csproj", "{44A541C2-F9D5-4117-9D96-FAEA2959434D}"
 EndProject
-Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "Packages", "Packages.mdproj", "{20FFD3C4-1C08-412A-8B07-CA04554B6547}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SambaLinkMaker.Tests", "SambaLinkMaker.Tests\SambaLinkMaker.Tests.csproj", "{87022A9D-DC24-414A-8B63-0CC4E427BF07}"
+EndProject
+Project("{9344BDBB-3E7F-41FC-A0DD-8665D75EE146}") = "Packages", "Packages.mdproj", "{C5258666-E4A8-4CD9-8EB0-87CE6BD7DCF3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,11 +13,15 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{20FFD3C4-1C08-412A-8B07-CA04554B6547}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{20FFD3C4-1C08-412A-8B07-CA04554B6547}.Release|x86.ActiveCfg = Release|Any CPU
-		{C2EE396E-2C69-4EC9-9805-294EF5C71725}.Debug|x86.ActiveCfg = Debug|x86
-		{C2EE396E-2C69-4EC9-9805-294EF5C71725}.Debug|x86.Build.0 = Debug|x86
-		{C2EE396E-2C69-4EC9-9805-294EF5C71725}.Release|x86.ActiveCfg = Release|x86
-		{C2EE396E-2C69-4EC9-9805-294EF5C71725}.Release|x86.Build.0 = Release|x86
+		{44A541C2-F9D5-4117-9D96-FAEA2959434D}.Debug|x86.ActiveCfg = Debug|x86
+		{44A541C2-F9D5-4117-9D96-FAEA2959434D}.Debug|x86.Build.0 = Debug|x86
+		{44A541C2-F9D5-4117-9D96-FAEA2959434D}.Release|x86.ActiveCfg = Release|x86
+		{44A541C2-F9D5-4117-9D96-FAEA2959434D}.Release|x86.Build.0 = Release|x86
+		{87022A9D-DC24-414A-8B63-0CC4E427BF07}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{87022A9D-DC24-414A-8B63-0CC4E427BF07}.Debug|x86.Build.0 = Debug|Any CPU
+		{87022A9D-DC24-414A-8B63-0CC4E427BF07}.Release|x86.ActiveCfg = Release|Any CPU
+		{87022A9D-DC24-414A-8B63-0CC4E427BF07}.Release|x86.Build.0 = Release|Any CPU
+		{C5258666-E4A8-4CD9-8EB0-87CE6BD7DCF3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C5258666-E4A8-4CD9-8EB0-87CE6BD7DCF3}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 EndGlobal
