@@ -145,8 +145,15 @@ namespace SambaLinkMaker {
 							SambaShareLoader.LoadGlobalSambaShares(shares);
 							break;
 //						case PlatformID.MacOSX:
-//						case PlatformID.Win32NT:
-//						case PlatformID.Win32Windows:
+						case PlatformID.Win32NT:
+							WindowsShareLoader.LoadGlobalShares(shares);
+							break;
+						case PlatformID.Win32Windows: // will it work?
+							WindowsShareLoader.LoadGlobalShares(shares);
+							break;
+						case PlatformID.WinCE: // will it work?
+							WindowsShareLoader.LoadGlobalShares(shares);
+							break;
 						default:
 							throw new Exception(string.Format("Unknown platform {0}. Could not get LAN shares from the system.", Environment.OSVersion.Platform));
 					}

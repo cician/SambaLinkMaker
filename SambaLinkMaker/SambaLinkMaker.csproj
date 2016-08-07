@@ -37,6 +37,7 @@
     <Reference Include="INIFileParser">
       <HintPath>..\packages\ini-parser.2.3.0\lib\net20\INIFileParser.dll</HintPath>
     </Reference>
+    <Reference Include="System.Management" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
@@ -48,6 +49,7 @@
     <Compile Include="TokenizedLocalPath.cs" />
     <Compile Include="Share.cs" />
     <Compile Include="SambaShareLoader.cs" />
+    <Compile Include="WindowsShareLoader.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
