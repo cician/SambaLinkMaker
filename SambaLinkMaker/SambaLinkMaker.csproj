@@ -47,6 +47,7 @@
     <Compile Include="LinkMaker.cs" />
     <Compile Include="TokenizedLocalPath.cs" />
     <Compile Include="Share.cs" />
+    <Compile Include="SambaShareLoader.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>

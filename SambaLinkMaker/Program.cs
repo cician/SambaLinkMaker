@@ -135,12 +135,25 @@ namespace SambaLinkMaker {
 				if (localPaths.Count < 1)
 					throw new InputError("local path not specified");
 
-				SharesList shares;
-				if (sharesfile != null) {
-					string shareListIniContent = File.ReadAllText(sharesfile, Encoding.UTF8);
-					shares = SharesList.ParseShareList(shareListIniContent);
+				SharesList shares = new SharesList();
+				if (sharesfile == null) {
+					// TODO windows?
+					switch (Environment.OSVersion.Platform) {
+						case PlatformID.Unix:
+							// Load the samba shares.
+							SambaShareLoader.LoadUserShares(shares);
+							SambaShareLoader.LoadGlobalSambaShares(shares);
+							break;
+//						case PlatformID.MacOSX:
+//						case PlatformID.Win32NT:
+//						case PlatformID.Win32Windows:
+						default:
+							throw new Exception(string.Format("Unknown platform {0}. Could not get LAN shares from the system.", Environment.OSVersion.Platform));
+					}
 				} else {
-					shares = SharesList.GetSambaShares();
+					// For the custom share list we use the same format as the "net usershare info" command.
+					string shareListIniContent = File.ReadAllText(sharesfile, Encoding.UTF8);
+					SambaShareLoader.ParseNetUserShareList(shares, shareListIniContent);
 				}
 
 				if (host == null) {

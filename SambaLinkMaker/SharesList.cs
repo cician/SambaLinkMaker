@@ -21,8 +21,6 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
-using IniParser.Parser;
-using IniParser.Model;
 
 namespace SambaLinkMaker {
 	/// <summary>
@@ -195,58 +193,6 @@ namespace SambaLinkMaker {
 
 			return result;
 		}
-
-		public static SharesList ParseShareList(string shareListIniContent) {
-			var parser = new IniDataParser();
-			var iniData = parser.Parse(shareListIniContent);
-
-			var result = new SharesList();
-
-			foreach (var shareIniSection in iniData.Sections) {
-				string shareName = shareIniSection.SectionName;
-				if (!shareIniSection.Keys.ContainsKey("path"))
-					throw new Exception(String.Format("share {0} doesn't have local path specified", shareName));
-
-				string shareLocalPath = shareIniSection.Keys["path"];
-				result.AddOrReplace(shareName, shareLocalPath);
-			}
-
-			return result;
-		}
-
-		public static SharesList GetSambaShares() {
-			// Use "net usershare info" command for easy access to samba shares without root.
-			// I don't know if it's generally avaiable and a good idea, but works well for me.
-			// Alternatives:
-			// - Parse smb.conf
-			// - Use some native samba library, but may as well rewrite in C
-			// - Let the user provide a list of shares
-			// 
-			// Actually this part can be abstracted and made cross platform. I even have some
-			// old windows code laying around for this purpose, but for now the goal is to run
-			// on Linux. Contributions welcome ;)
-			string output;
-			using (System.Diagnostics.Process p = new System.Diagnostics.Process()) {
-				p.StartInfo.FileName = "net";
-				p.StartInfo.Arguments = "usershare info";
-				p.StartInfo.RedirectStandardError = false;
-				p.StartInfo.RedirectStandardOutput = true;
-				p.StartInfo.UseShellExecute = false;
-				if (!p.Start())
-					throw new Exception("could not start command \"net usershare info\" to get list of shares");
-
-				output = p.StandardOutput.ReadToEnd();
-
-				p.WaitForExit();
-
-				if (p.ExitCode != 0)
-					throw new Exception(string.Format("command \"net usershare info\" returned error code {0}", p.ExitCode));
-			}
-
-			return ParseShareList(output);
-		}
-
-
 	}
 }
 
