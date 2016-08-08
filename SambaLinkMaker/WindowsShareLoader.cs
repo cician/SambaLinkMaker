@@ -38,8 +38,7 @@ namespace SambaLinkMaker {
 
 					dstList.AddOrReplace(shareName, localPath);
 				}
-			}          
-			Console.ReadKey();
+			}
 		}
 	}
 }
