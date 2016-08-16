@@ -38,9 +38,6 @@ namespace SambaLinkMaker {
 
 		public string NameEscaped { get { return nameEscaped; } }
 
-		public Share(string name, string localPath) : this(name, new TokenizedLocalPath(localPath)) {
-		}
-
 		public Share(string name, TokenizedLocalPath localPath) {
 			this.name = name;
 			this.nameEscaped = Uri.EscapeUriString(name);

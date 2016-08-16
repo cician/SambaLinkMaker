@@ -81,6 +81,7 @@ namespace SambaLinkMaker {
 			return result;
 		}
 
+		[STAThread] // for Windows.Forms, which is used by clipboard
 		public static int Main(string[] args) {
 			// Failed unless otherwise reached the right point.
 			int exitCode = 1;
@@ -115,15 +116,25 @@ namespace SambaLinkMaker {
 					v => readStdIn = v != null },
 				{ "nostderr", "Write errors into stdout instead of stderr.",
 					v => noStdErr = v != null },
-				//{ "copy",  "Copy the result to clipboard instead of standard output.", 
-				//	v => copyToClipboard = v != null },
+				{ "copy",  "Copy the result to clipboard instead of standard output.", 
+					v => copyToClipboard = v != null },
 			};
 
 			try {
 				List<string> localPaths = options.Parse(args);
 
+				TextWriter output;
+				StringWriter outputSW;
+				if (copyToClipboard) {
+					outputSW = new StringWriter();
+					output = outputSW;
+				} else {
+					outputSW = null;
+					output = Console.Out;
+				}
+
 				if (noStdErr)
-					Console.SetError(Console.Out);
+					Console.SetError(output);
 
 				if (readStdIn) {
 					string s;
@@ -175,16 +186,6 @@ namespace SambaLinkMaker {
 					}
 				}
 
-				TextWriter output;
-				StringWriter outputSW;
-				if (copyToClipboard) {
-					outputSW = new StringWriter();
-					output = outputSW;
-				} else {
-					outputSW = null;
-					output = Console.Out;
-				}
-
 				/*
 				 * Small note on complexity. For now the complexity is exponential.
 				 * As long as there aren't many shares AND many paths to convert it
@@ -209,13 +210,33 @@ namespace SambaLinkMaker {
 
 					TokenizedLocalPath tokenizedLocalPath = null;
 					try {
-						tokenizedLocalPath = new TokenizedLocalPath(localPath);
+						// Do some sanity checks and make the path absolute.
+						string localAbsolutePath;
+						{
+//							Uri uri = null;
+//							if (Uri.TryCreate(localPath, UriKind.RelativeOrAbsolute, out uri)) {
+//								if (!uri.IsFile)
+//									throw new ArgumentException(string.Format("Could not resolve path {0} to URI. Only file/directory paths are supported.", localPath));
+//
+//								// Specific case for URIs like file://host/..., but I haven't seen them in the wild.
+//								if (uri.Host != null && uri.Host != "")
+//									throw new ArgumentException(string.Format("Could not resolve path {0} to URI. Only file/directory paths are supported.", localPath));
+//
+//								// replace the path with the absolute one taken from the URI
+//								localAbsolutePath = uri.LocalPath;
+//							} else {
+								// use the passed path as-is
+								localAbsolutePath = localPath;
+//							}
+						}
+
+						tokenizedLocalPath = new TokenizedLocalPath(localAbsolutePath, Path.DirectorySeparatorChar);
 					} catch (Exception ex) {
 						Console.Error.WriteLine(ex.ToString());
 					}
 
 					if (tokenizedLocalPath != null) {
-						link = LinkMaker.MakeLink(linkFormat, host, shares, tokenizedLocalPath);	
+						link = LinkMaker.MakeLink(linkFormat, host, shares, tokenizedLocalPath, Path.DirectorySeparatorChar);
 					} else {
 						link = localPath;
 					}
@@ -229,14 +250,10 @@ namespace SambaLinkMaker {
 					}
 				}
 
-				/*
 				if (copyToClipboard) {
-					//Xwt.Application.Initialize ("Xwt.GtkBackend.GtkEngine, Xwt.Gtk, Version=1.0.0.0");
-					//Xwt.Clipboard.SetText(outputSW.ToString());
-					//Xwt.Application.Dispose();
-					System.Windows.Forms.Clipboard.SetText(outputSW.ToString());
+					string text = outputSW.ToString();
+					ClipboardHelper.CopyText(text);
 				}
-				*/
 
 				if (foundAll) {
 					// OK. If we reached this point then everything went O~K.

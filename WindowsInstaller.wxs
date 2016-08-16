@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
+    <Product
+        Name='SambaLinkMaker'
+        Id='*'
+        UpgradeCode='D9B2B042-ADB4-48B6-A216-C4863A9FD7FF'
+        Version='1.0.0'
+        Manufacturer='Maciej Kacper Jagiello'>
+        
+        <Package InstallerVersion="200" Compressed="yes" Comments="Windows Installer Package"/>
+        <Media Id='1' Cabinet='content.cab' EmbedCab='yes' />
+        
+        <Icon Id="ApplicationIcon" SourceFile="Resources/icon.ico" />
+
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <Directory Id="ProgramFiles64Folder">
+                <Directory Id="INSTALLDIR" Name="SambaLinkMaker">
+                    <Component Id="ApplicationFiles" Guid="BB8A404F-FAC3-46CE-8754-02BF3CC58400" Win64="yes">
+                        <File Id='SambaLinkMaker.exe' Source='SambaLinkMaker/bin/Release/SambaLinkMaker.exe'/>
+                        <File Id='Mono.Options.dll' Source='SambaLinkMaker/bin/Release/Mono.Options.dll'/>
+                        <File Id='INIFileParser.dll' Source='SambaLinkMaker/bin/Release/INIFileParser.dll'/>
+                        <File Id='LICENSE.txt' Source='LICENSE'/>
+                        <File Id='README.md' Source='README.md'/>
+                        
+                        <RegistryValue Root="HKCU" Key="Software\SambaLinkMaker" Name="installed_basefiles" Type="integer" Value="1" KeyPath="yes"/>
+                    </Component>
+                    <Component Id="ExplorerMenus" Guid="AAC11E6F-8CEE-4459-B907-115AEBB5C192" Win64="yes">
+                        <RegistryValue Root="HKCU" Key="Software\SambaLinkMaker" Name="installed_explorermenus" Type="integer" Value="1" KeyPath="yes"/>
+                        
+                        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Directory\shell\SambaLinkMaker">
+                            <RegistryValue Name="MUIVerb" Type="string" Value="Copy"/>
+                            <RegistryValue Name="SubCommands" Type="string" Value="copylocalpath;copylocaluri;copyunclink;copyuncescapedlink;copysmblink"/>
+                            <RegistryValue Name="icon" Type="string" Value="[INSTALLDIR]SambaLinkMaker.exe"/>
+                        </RegistryKey>
+                        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\*\shell\SambaLinkMaker">
+                            <RegistryValue Name="MUIVerb" Type="string" Value="Copy"/>
+                            <RegistryValue Name="SubCommands" Type="string" Value="copylocalpath;copylocaluri;copyunclink;copyuncescapedlink;copysmblink"/>
+                            <RegistryValue Name="icon" Type="string" Value="[INSTALLDIR]SambaLinkMaker.exe"/>
+                        </RegistryKey>
+                        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Drive\shell\SambaLinkMaker">
+                            <RegistryValue Name="MUIVerb" Type="string" Value="Copy"/>
+                            <RegistryValue Name="SubCommands" Type="string" Value="copylocalpath;copylocaluri;copyunclink;copyuncescapedlink;copysmblink"/>
+                            <RegistryValue Name="icon" Type="string" Value="[INSTALLDIR]SambaLinkMaker.exe"/>
+                        </RegistryKey>
+                        <RegistryKey Root="HKLM" Key="SOFTWARE\Classes\Folder\shell\SambaLinkMaker">
+                            <RegistryValue Name="MUIVerb" Type="string" Value="Copy"/>
+                            <RegistryValue Name="SubCommands" Type="string" Value="copylocalpath;copylocaluri;copyunclink;copyuncescapedlink;copysmblink"/>
+                            <RegistryValue Name="icon" Type="string" Value="[INSTALLDIR]SambaLinkMaker.exe"/>
+                        </RegistryKey>
+
+                        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\copylocalpath">
+                            <RegistryValue Type="expandable" Value="Copy local path to clipboard."/>
+                        </RegistryKey>
+                        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\copylocalpath\command">
+                            <RegistryValue Type="expandable" Value="&quot;[INSTALLDIR]SambaLinkMaker.exe&quot; --format=localpath --nostderr --copy &quot;%1&quot;"/>
+                        </RegistryKey>
+
+                        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\copylocaluri">
+                            <RegistryValue Type="expandable" Value="Copy local file:// URI to clipboard."/>
+                        </RegistryKey>
+                        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\copylocaluri\command">
+                            <RegistryValue Type="expandable" Value="&quot;[INSTALLDIR]SambaLinkMaker.exe&quot; --format=localfile --nostderr --copy &quot;%1&quot;"/>
+                        </RegistryKey>
+
+                        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\copyunclink">
+                            <RegistryValue Type="expandable" Value="Copy Windows UNC link to clipboard (unescaped)."/>
+                        </RegistryKey>
+                        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\copyunclink\command">
+                            <RegistryValue Type="expandable" Value="&quot;[INSTALLDIR]SambaLinkMaker.exe&quot; --format=unc --nostderr --copy &quot;%1&quot;"/>
+                        </RegistryKey>
+                        
+                         <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\copyuncescapedlink">
+                            <RegistryValue Type="expandable" Value="Copy Windows UNC link to clipboard (escaped)."/>
+                        </RegistryKey>
+                        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\copyuncescapedlink\command">
+                            <RegistryValue Type="expandable" Value="&quot;[INSTALLDIR]SambaLinkMaker.exe&quot; --format=uncescaped --nostderr --copy &quot;%1&quot;"/>
+                        </RegistryKey>
+                        
+                        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\copysmblink">
+                            <RegistryValue Type="expandable" Value="Copy smb:// link to clipboard."/>
+                        </RegistryKey>
+                        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\CommandStore\shell\copysmblink\command">
+                            <RegistryValue Type="expandable" Value="&quot;[INSTALLDIR]SambaLinkMaker.exe&quot; --format=smb --nostderr --copy &quot;%1&quot;"/>
+                        </RegistryKey>
+                        
+                    </Component>
+                </Directory>
+            </Directory>
+        </Directory>
+
+        <Feature Id="DefaultFeature" Level="1">
+            <ComponentRef Id="ApplicationFiles"/>
+            <ComponentRef Id="ExplorerMenus"/>
+        </Feature>
+    </Product>
+</Wix>

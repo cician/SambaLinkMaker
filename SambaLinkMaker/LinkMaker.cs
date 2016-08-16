@@ -24,7 +24,7 @@ using System.Text;
 
 namespace SambaLinkMaker {
 	public class LinkMaker {
-		public static string ComposeLink(LinkFormat linkFormat, string host, Share share, TokenizedLocalPath shareRelativePath) {
+		public static string ComposeLink(LinkFormat linkFormat, string host, Share share, TokenizedLocalPath shareRelativePath, char systemSeparator) {
 			StringBuilder sb = new StringBuilder();
 			if (linkFormat == LinkFormat.Smb) {
 				sb.Append("smb://");
@@ -64,16 +64,20 @@ namespace SambaLinkMaker {
 				}
 			} else if (linkFormat == LinkFormat.LocalFile) {
 				sb.Append("file://");
-				share.LocalPath.Format(sb, true, '/');
+				if (share != null)
+					share.LocalPath.Format(sb, true, '/');
 				if (shareRelativePath != null && !shareRelativePath.IsEmpty()) {
-					sb.Append('/');
+					if (share != null)
+						sb.Append('/');
 					shareRelativePath.Format(sb, true, '/');
 				}
 			} else if (linkFormat == LinkFormat.LocalPath) {
-				share.LocalPath.Format(sb, false, Path.DirectorySeparatorChar);
+				if (share != null)
+					share.LocalPath.Format(sb, false, systemSeparator);
 				if (shareRelativePath != null && !shareRelativePath.IsEmpty()) {
-					sb.Append(Path.DirectorySeparatorChar);
-					shareRelativePath.Format(sb, false, Path.DirectorySeparatorChar);
+					if (share != null)
+						sb.Append(systemSeparator);
+					shareRelativePath.Format(sb, false, systemSeparator);
 				}
 			} else {
 				throw new Exception("unexpected link format: " + linkFormat);
@@ -83,13 +87,17 @@ namespace SambaLinkMaker {
 			return link;
 		}
 
-		public static string MakeLink(LinkFormat linkFormat, string host, SharesList shares, TokenizedLocalPath localPath) {
-			Share share = shares.FindParentShare(localPath);
-			if (share != null) {
-				TokenizedLocalPath relPath = TokenizedLocalPath.MakeRelative(share.LocalPath, localPath);
-				return ComposeLink(linkFormat, host, share, relPath);
+		public static string MakeLink(LinkFormat linkFormat, string host, SharesList shares, TokenizedLocalPath localPath, char systemSeparator) {
+			if (linkFormat == LinkFormat.LocalFile || linkFormat == LinkFormat.LocalPath) {
+				return ComposeLink(linkFormat, host, null, localPath, systemSeparator);
 			} else {
-				return null;
+				Share share = shares.FindParentShare(localPath);
+				if (share != null) {
+					TokenizedLocalPath relPath = TokenizedLocalPath.MakeRelative(share.LocalPath, localPath);
+					return ComposeLink(linkFormat, host, share, relPath, systemSeparator);
+				} else {
+					return null;
+				}
 			}
 		}
 	}

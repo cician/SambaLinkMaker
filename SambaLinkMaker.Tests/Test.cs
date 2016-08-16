@@ -7,6 +7,42 @@ using System.Linq;
 namespace SambaLinkMaker.Tests {
 	[TestFixture()]
 	public class Test {
+		// some convenience methods to make the tests easier to read
+
+		private TokenizedLocalPath Path(params string[] pathElems) {
+			return new TokenizedLocalPath(pathElems);
+		}
+
+		private TokenizedLocalPath UnixPath(string path) {
+			return new TokenizedLocalPath(path, '/');
+		}
+
+		private TokenizedLocalPath WindowsPath(string path) {
+			return new TokenizedLocalPath(path, '\\');
+		}
+
+		private Share UnixShare(string shareName, string sharePath) {
+			return new Share(shareName, new TokenizedLocalPath(sharePath, '/'));
+		}
+
+		private Share WindowsShare(string shareName, string sharePath) {
+			return new Share(shareName, new TokenizedLocalPath(sharePath, '\\'));
+		}
+
+		[Test()]
+		public void TokenizePaths() {
+			Assert.AreEqual("/home/test.txt", new TokenizedLocalPath("/home/test.txt", '/').Format(false, '/'));
+			Assert.AreEqual("/home/a b.txt", new TokenizedLocalPath("/home/a b.txt", '/').Format(false, '/'));
+			Assert.AreEqual("/test.txt", new TokenizedLocalPath("/test.txt", '/').Format(false, '/'));
+
+			// Root itself is handled as empty string.
+			Assert.AreEqual("", new TokenizedLocalPath("/", '/').Format(false, '/'));
+
+			Assert.AreEqual("c:\\home\\a b.txt", new TokenizedLocalPath("c:\\home\\a b.txt", '\\').Format(false, '\\'));
+			Assert.AreEqual("c:\\test.txt", new TokenizedLocalPath("c:\\test.txt", '\\').Format(false, '\\'));
+			Assert.AreEqual("c:", new TokenizedLocalPath("c:\\", '\\').Format(false, '\\'));
+		}
+
 		[Test()]
 		public void ParseUserSharesList() {
 			SharesList list = new SharesList();
@@ -26,8 +62,8 @@ namespace SambaLinkMaker.Tests {
 				guest_ok=n"
 			);
 
-			Assert.AreEqual(new TokenizedLocalPath("/home/user/FA"), list.GetShareByName("Share1").LocalPath);
-			Assert.AreEqual(new TokenizedLocalPath("/mnt/movies and music/"), list.GetShareByName("share 2").LocalPath);
+			Assert.AreEqual(UnixPath("/home/user/FA"), list.GetShareByName("Share1").LocalPath);
+			Assert.AreEqual(UnixPath("/mnt/movies and music/"), list.GetShareByName("share 2").LocalPath);
 		}
 
 		[Test()]
@@ -296,97 +332,121 @@ guest ok = yes
 
 			);
 
-			Assert.AreEqual(new TokenizedLocalPath("/home/user/FA"), list.GetShareByName("Share1").LocalPath);
-			Assert.AreEqual(new TokenizedLocalPath("/mnt/movies and music/"), list.GetShareByName("share 2").LocalPath);
+			Assert.AreEqual(UnixPath("/home/user/FA"), list.GetShareByName("Share1").LocalPath);
+			Assert.AreEqual(UnixPath("/mnt/movies and music/"), list.GetShareByName("share 2").LocalPath);
 		}
 
 		[Test()]
 		public void FindShareShareSimple() {
 			var list = new SharesList();
-			list.AddOrReplace("testshare", "/home/user/downloads");
-			Assert.IsNotNull(list.FindParentShare("/home/user/downloads/test.txt"));
+			list.AddOrReplace(new Share("testshare", UnixPath("/home/user/downloads")));
+			Assert.IsNotNull(list.FindParentShare(UnixPath("/home/user/downloads/test.txt")));
 		}
 
 		[Test()]
 		public void FindShareShareSpecifityRule() {
 			var list = new SharesList();
-			list.AddOrReplace("A", "/home/user");
-			list.AddOrReplace("B", "/home/user/downloads");
-			Assert.AreEqual("B", list.FindParentShare("/home/user/downloads/test.txt")?.Name);
+			list.AddOrReplace(UnixShare("A", "/home/user"));
+			list.AddOrReplace(UnixShare("B", "/home/user/downloads"));
+			Assert.AreEqual("B", list.FindParentShare(UnixPath("/home/user/downloads/test.txt"))?.Name);
+		}
+
+		[Test()]
+		public void FindShareUnixRoot() {
+			var list = new SharesList();
+			list.AddOrReplace(UnixShare("testshare", "/"));
+			Assert.IsNotNull(list.FindParentShare(UnixPath("/home/user/downloads/test.txt")));
+			Assert.IsNotNull(list.FindParentShare(UnixPath("/")));
+		}
+
+		[Test()]
+		public void FindShareWindowsSimple() {
+			var list = new SharesList();
+			list.AddOrReplace(WindowsShare("testshare", "c:"));
+			Assert.IsNotNull(list.FindParentShare(WindowsPath("c:\\subdir\\test.txt")));
+			Assert.IsNotNull(list.FindParentShare(WindowsPath("c:\\test.txt")));
+		}
+
+		[Test()]
+		public void FindShareWindowsDrive() {
+			var list = new SharesList();
+			list.AddOrReplace(WindowsShare("testshare", "c:"));
+			Assert.IsNotNull(list.FindParentShare(WindowsPath("c:\\")));
+			Assert.IsNotNull(list.FindParentShare(WindowsPath("c:")));
 		}
 
 		[Test()]
 		public void ComposeLinkSimple() {
-			var share = new Share("share", "/home/user/share");
-			var relPath = new TokenizedLocalPath("a", "b.txt");
-			Assert.AreEqual("/home/user/share/a/b.txt", LinkMaker.ComposeLink(LinkFormat.LocalPath, "host", share, relPath));
-			Assert.AreEqual("file:///home/user/share/a/b.txt", LinkMaker.ComposeLink(LinkFormat.LocalFile, "host", share, relPath));
-			Assert.AreEqual("file://host/share/a/b.txt", LinkMaker.ComposeLink(LinkFormat.File, "host", share, relPath));
-			Assert.AreEqual(@"\\host\share\a\b.txt", LinkMaker.ComposeLink(LinkFormat.Unc, "host", share, relPath));
-			Assert.AreEqual(@"\\host\share\a\b.txt", LinkMaker.ComposeLink(LinkFormat.UncEscaped, "host", share, relPath));
-			Assert.AreEqual("smb://host/share/a/b.txt", LinkMaker.ComposeLink(LinkFormat.Smb, "host", share, relPath));
+			var share = UnixShare("share", "/home/user/share");
+			var relPath = Path("a", "b.txt");
+			Assert.AreEqual("/home/user/share/a/b.txt", LinkMaker.ComposeLink(LinkFormat.LocalPath, "host", share, relPath, '/'));
+			Assert.AreEqual("file:///home/user/share/a/b.txt", LinkMaker.ComposeLink(LinkFormat.LocalFile, "host", share, relPath, '/'));
+			Assert.AreEqual("file://host/share/a/b.txt", LinkMaker.ComposeLink(LinkFormat.File, "host", share, relPath, '/'));
+			Assert.AreEqual(@"\\host\share\a\b.txt", LinkMaker.ComposeLink(LinkFormat.Unc, "host", share, relPath, '/'));
+			Assert.AreEqual(@"\\host\share\a\b.txt", LinkMaker.ComposeLink(LinkFormat.UncEscaped, "host", share, relPath, '/'));
+			Assert.AreEqual("smb://host/share/a/b.txt", LinkMaker.ComposeLink(LinkFormat.Smb, "host", share, relPath, '/'));
 		}
 
 		[Test()]
 		public void ComposeLinkSpaces() {
-			var share = new Share("my share", "/home/user/my share");
-			var relPath = new TokenizedLocalPath("a", "b c.txt");
-			Assert.AreEqual("/home/user/my share/a/b c.txt", LinkMaker.ComposeLink(LinkFormat.LocalPath, "host", share, relPath));
-			Assert.AreEqual("file:///home/user/my%20share/a/b%20c.txt", LinkMaker.ComposeLink(LinkFormat.LocalFile, "host", share, relPath));
-			Assert.AreEqual("file://host/my%20share/a/b%20c.txt", LinkMaker.ComposeLink(LinkFormat.File, "host", share, relPath));
-			Assert.AreEqual(@"\\host\my share\a\b c.txt", LinkMaker.ComposeLink(LinkFormat.Unc, "host", share, relPath));
-			Assert.AreEqual(@"\\host\my%20share\a\b%20c.txt", LinkMaker.ComposeLink(LinkFormat.UncEscaped, "host", share, relPath));
-			Assert.AreEqual("smb://host/my%20share/a/b%20c.txt", LinkMaker.ComposeLink(LinkFormat.Smb, "host", share, relPath));
+			var share = UnixShare("my share", "/home/user/my share");
+			var relPath = Path("a", "b c.txt");
+			Assert.AreEqual("/home/user/my share/a/b c.txt", LinkMaker.ComposeLink(LinkFormat.LocalPath, "host", share, relPath, '/'));
+			Assert.AreEqual("file:///home/user/my%20share/a/b%20c.txt", LinkMaker.ComposeLink(LinkFormat.LocalFile, "host", share, relPath, '/'));
+			Assert.AreEqual("file://host/my%20share/a/b%20c.txt", LinkMaker.ComposeLink(LinkFormat.File, "host", share, relPath, '/'));
+			Assert.AreEqual(@"\\host\my share\a\b c.txt", LinkMaker.ComposeLink(LinkFormat.Unc, "host", share, relPath, '/'));
+			Assert.AreEqual(@"\\host\my%20share\a\b%20c.txt", LinkMaker.ComposeLink(LinkFormat.UncEscaped, "host", share, relPath, '/'));
+			Assert.AreEqual("smb://host/my%20share/a/b%20c.txt", LinkMaker.ComposeLink(LinkFormat.Smb, "host", share, relPath, '/'));
 		}
 
 		[Test()]
 		public void ComposeLinkShareItSelf() {
-			var share = new Share("share", "/home/user/share");
-			var relPath = new TokenizedLocalPath();
-			Assert.AreEqual("/home/user/share", LinkMaker.ComposeLink(LinkFormat.LocalPath, "host", share, relPath));
-			Assert.AreEqual("file:///home/user/share", LinkMaker.ComposeLink(LinkFormat.LocalFile, "host", share, relPath));
-			Assert.AreEqual("file://host/share", LinkMaker.ComposeLink(LinkFormat.File, "host", share, relPath));
-			Assert.AreEqual(@"\\host\share", LinkMaker.ComposeLink(LinkFormat.Unc, "host", share, relPath));
-			Assert.AreEqual(@"\\host\share", LinkMaker.ComposeLink(LinkFormat.UncEscaped, "host", share, relPath));
-			Assert.AreEqual("smb://host/share", LinkMaker.ComposeLink(LinkFormat.Smb, "host", share, relPath));
+			var share = UnixShare("share", "/home/user/share");
+			var relPath = Path();
+			Assert.AreEqual("/home/user/share", LinkMaker.ComposeLink(LinkFormat.LocalPath, "host", share, relPath, '/'));
+			Assert.AreEqual("file:///home/user/share", LinkMaker.ComposeLink(LinkFormat.LocalFile, "host", share, relPath, '/'));
+			Assert.AreEqual("file://host/share", LinkMaker.ComposeLink(LinkFormat.File, "host", share, relPath, '/'));
+			Assert.AreEqual(@"\\host\share", LinkMaker.ComposeLink(LinkFormat.Unc, "host", share, relPath, '/'));
+			Assert.AreEqual(@"\\host\share", LinkMaker.ComposeLink(LinkFormat.UncEscaped, "host", share, relPath, '/'));
+			Assert.AreEqual("smb://host/share", LinkMaker.ComposeLink(LinkFormat.Smb, "host", share, relPath, '/'));
 		}
 
 		[Test()]
 		public void MakeLinkSimple() {
 			var list = new SharesList();
-			list.AddOrReplace("share", "/home/user/share");
-			var localPath = new TokenizedLocalPath("/home/user/share/test.txt");
-			Assert.AreEqual("/home/user/share/test.txt", LinkMaker.MakeLink(LinkFormat.LocalPath, "host", list, localPath));
-			Assert.AreEqual("file:///home/user/share/test.txt", LinkMaker.MakeLink(LinkFormat.LocalFile, "host", list, localPath));
-			Assert.AreEqual("file://host/share/test.txt", LinkMaker.MakeLink(LinkFormat.File, "host", list, localPath));
-			Assert.AreEqual(@"\\host\share\test.txt", LinkMaker.MakeLink(LinkFormat.Unc, "host", list, localPath));
-			Assert.AreEqual(@"\\host\share\test.txt", LinkMaker.MakeLink(LinkFormat.UncEscaped, "host", list, localPath));
-			Assert.AreEqual("smb://host/share/test.txt", LinkMaker.MakeLink(LinkFormat.Smb, "host", list, localPath));
+			list.AddOrReplace(UnixShare("share", "/home/user/share"));
+			var localPath = UnixPath("/home/user/share/test.txt");
+			Assert.AreEqual("/home/user/share/test.txt", LinkMaker.MakeLink(LinkFormat.LocalPath, "host", list, localPath, '/'));
+			Assert.AreEqual("file:///home/user/share/test.txt", LinkMaker.MakeLink(LinkFormat.LocalFile, "host", list, localPath, '/'));
+			Assert.AreEqual("file://host/share/test.txt", LinkMaker.MakeLink(LinkFormat.File, "host", list, localPath, '/'));
+			Assert.AreEqual(@"\\host\share\test.txt", LinkMaker.MakeLink(LinkFormat.Unc, "host", list, localPath, '/'));
+			Assert.AreEqual(@"\\host\share\test.txt", LinkMaker.MakeLink(LinkFormat.UncEscaped, "host", list, localPath, '/'));
+			Assert.AreEqual("smb://host/share/test.txt", LinkMaker.MakeLink(LinkFormat.Smb, "host", list, localPath, '/'));
 		}
 
 		[Test()]
 		public void MakeLinkMultiple() {
 			var list = new SharesList();
-			list.AddOrReplace("share1", "/home/user/share1");
-			list.AddOrReplace("share2", "/home/user/share2");
+			list.AddOrReplace(UnixShare("share1", "/home/user/share1"));
+			list.AddOrReplace(UnixShare("share2", "/home/user/share2"));
 			{
-				var localPath = new TokenizedLocalPath("/home/user/share1/test.txt");
-				Assert.AreEqual("/home/user/share1/test.txt", LinkMaker.MakeLink(LinkFormat.LocalPath, "host", list, localPath));
-				Assert.AreEqual("file:///home/user/share1/test.txt", LinkMaker.MakeLink(LinkFormat.LocalFile, "host", list, localPath));
-				Assert.AreEqual("file://host/share1/test.txt", LinkMaker.MakeLink(LinkFormat.File, "host", list, localPath));
-				Assert.AreEqual(@"\\host\share1\test.txt", LinkMaker.MakeLink(LinkFormat.Unc, "host", list, localPath));
-				Assert.AreEqual(@"\\host\share1\test.txt", LinkMaker.MakeLink(LinkFormat.UncEscaped, "host", list, localPath));
-				Assert.AreEqual("smb://host/share1/test.txt", LinkMaker.MakeLink(LinkFormat.Smb, "host", list, localPath));
+				var localPath = UnixPath("/home/user/share1/test.txt");
+				Assert.AreEqual("/home/user/share1/test.txt", LinkMaker.MakeLink(LinkFormat.LocalPath, "host", list, localPath, '/'));
+				Assert.AreEqual("file:///home/user/share1/test.txt", LinkMaker.MakeLink(LinkFormat.LocalFile, "host", list, localPath, '/'));
+				Assert.AreEqual("file://host/share1/test.txt", LinkMaker.MakeLink(LinkFormat.File, "host", list, localPath, '/'));
+				Assert.AreEqual(@"\\host\share1\test.txt", LinkMaker.MakeLink(LinkFormat.Unc, "host", list, localPath, '/'));
+				Assert.AreEqual(@"\\host\share1\test.txt", LinkMaker.MakeLink(LinkFormat.UncEscaped, "host", list, localPath, '/'));
+				Assert.AreEqual("smb://host/share1/test.txt", LinkMaker.MakeLink(LinkFormat.Smb, "host", list, localPath, '/'));
 			}
 
 			{
-				var localPath = new TokenizedLocalPath("/home/user/share2/test.txt");
-				Assert.AreEqual("/home/user/share2/test.txt", LinkMaker.MakeLink(LinkFormat.LocalPath, "host", list, localPath));
-				Assert.AreEqual("file:///home/user/share2/test.txt", LinkMaker.MakeLink(LinkFormat.LocalFile, "host", list, localPath));
-				Assert.AreEqual("file://host/share2/test.txt", LinkMaker.MakeLink(LinkFormat.File, "host", list, localPath));
-				Assert.AreEqual(@"\\host\share2\test.txt", LinkMaker.MakeLink(LinkFormat.Unc, "host", list, localPath));
-				Assert.AreEqual(@"\\host\share2\test.txt", LinkMaker.MakeLink(LinkFormat.UncEscaped, "host", list, localPath));
-				Assert.AreEqual("smb://host/share2/test.txt", LinkMaker.MakeLink(LinkFormat.Smb, "host", list, localPath));
+				var localPath = UnixPath("/home/user/share2/test.txt");
+				Assert.AreEqual("/home/user/share2/test.txt", LinkMaker.MakeLink(LinkFormat.LocalPath, "host", list, localPath, '/'));
+				Assert.AreEqual("file:///home/user/share2/test.txt", LinkMaker.MakeLink(LinkFormat.LocalFile, "host", list, localPath, '/'));
+				Assert.AreEqual("file://host/share2/test.txt", LinkMaker.MakeLink(LinkFormat.File, "host", list, localPath, '/'));
+				Assert.AreEqual(@"\\host\share2\test.txt", LinkMaker.MakeLink(LinkFormat.Unc, "host", list, localPath, '/'));
+				Assert.AreEqual(@"\\host\share2\test.txt", LinkMaker.MakeLink(LinkFormat.UncEscaped, "host", list, localPath, '/'));
+				Assert.AreEqual("smb://host/share2/test.txt", LinkMaker.MakeLink(LinkFormat.Smb, "host", list, localPath, '/'));
 			}
 		}
 	}

@@ -36,7 +36,7 @@ namespace SambaLinkMaker {
 					throw new Exception(String.Format("share {0} doesn't have local path specified", shareName));
 
 				string shareLocalPath = shareIniSection.Keys["path"];
-				dstList.AddOrReplace(shareName, shareLocalPath);
+				dstList.AddOrReplace(new Share(shareName, new TokenizedLocalPath(shareLocalPath, '/')));
 			}
 		}
 
@@ -87,7 +87,7 @@ namespace SambaLinkMaker {
 					throw new Exception(String.Format("share {0} doesn't have local path specified", shareName));
 
 				string shareLocalPath = shareIniSection.Keys["path"];
-				dstList.AddOrReplace(shareName, shareLocalPath);
+				dstList.AddOrReplace(new Share(shareName, new TokenizedLocalPath(shareLocalPath, '/')));
 			}
 		}
 

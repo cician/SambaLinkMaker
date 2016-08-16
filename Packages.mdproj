@@ -4,7 +4,7 @@
     <ItemType>PackagingProject</ItemType>
     <ProjectGuid>{C5258666-E4A8-4CD9-8EB0-87CE6BD7DCF3}</ProjectGuid>
     <Packages>
-      <Packages xmlns="">
+      <Packages>
         <Package name="Linux Binaries">
           <Builder targetFile="SambaLinkMaker.tar.gz" platform="Linux" configuration="Debug|x86" ctype="BinariesZipPackageBuilder">
             <RootEntry path="SambaLinkMaker\SambaLinkMaker.csproj" />

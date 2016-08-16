@@ -32,40 +32,24 @@ namespace SambaLinkMaker {
 	/// I wanted full control of what happens on different platforms.
 	/// </summary>
 	public class TokenizedLocalPath : IEnumerable<string> {
-		private static readonly char[] separators = { Path.DirectorySeparatorChar };
-
 		private readonly string[] pathElements;
 
-		public TokenizedLocalPath(params string[] pathElements) {
+		public TokenizedLocalPath(string[] pathElements) {
 			this.pathElements = pathElements;
 		}
 
-		public TokenizedLocalPath(string path) {
+		public TokenizedLocalPath(string path, char systemSeparator) {
 			// Here a natural thing to do would be to pass StringSplitOptions.RemoveEmptyEntries.
 			// Instead I decided to preserve the empty values and to implicitly make an element
 			// for unix root paths with empty string. The rest of the code kinda supposes this
 			// to happen. On windows the root will be the drive letter.
 
-			Uri uri = null;
-			if (!Uri.TryCreate(path, UriKind.Absolute, out uri)) {
-				Uri currentDir = new Uri(System.Environment.CurrentDirectory);
-				if (!Uri.TryCreate(currentDir, path, out uri))
-					throw new ArgumentException(string.Format("Could not resolve path {0} to URI", path));
-			}
-
-			if (!uri.IsFile)
-				throw new ArgumentException(string.Format("Could not resolve path {0} to URI. Only file/directory paths are supported.", path));
-
-			// Specific case for URIs like file://host/..., but I haven't seen them in the wild.
-			if (uri.Host != null && uri.Host != "")
-				throw new ArgumentException(string.Format("Could not resolve path {0} to URI. Only file/directory paths are supported.", path));
-
-			path = uri.LocalPath;
+			char[] directorySeparators = { systemSeparator };
 
 			// But we still want to remove trailing slashes.
-			path = path.TrimEnd(separators);
+			path = path.TrimEnd(directorySeparators);
 
-			this.pathElements = path.Split(separators, StringSplitOptions.None);
+			this.pathElements = path.Split(directorySeparators, StringSplitOptions.None);
 		}
 
 		IEnumerator<string> IEnumerable<string>.GetEnumerator() {

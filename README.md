@@ -24,5 +24,28 @@ of shares this program uses the Samba's
 [net](https://www.samba.org/samba/docs/man/manpages/net.8.html) command. I think
 it's installed by default with samba.
 
+# Packaging
+To create windows .msi installer you need to install
+[wixl](https://wiki.gnome.org/msitools).
+    sudo apt-get install wixl
+The run
+    wixl WindowsInstaller.wxs
+    
+For .tar.gz releases I'm using MonoDevelop's linux deployment feature.
+
+Regenerating the icons from SVGs:
+    mogrify -path Resources -format ico -density 600 -define icon:auto-resize=256,128,64,48,32,24,16 Resources/*.svg
+
+# OS integration
+## Windows MSI installer.
+Adds a Copy context menu in Explorer with various choices. In current form
+it's fairy limited, but works. Know issues/limits:
+- Only accepts one file or directory at a time. Overcoming this limitation
+requires writing a shell extension. I know there's sharp shell, but seemes a bit
+of an overkill. Another option would be to include
+(this little program)[https://github.com/zenden2k/context-menu-launcher]
+- Copying a drive path results in wrong link. This seems a windows bug to me.
+Only tested on 64 bit Windows 7.
+
 # Licensing
 SambaLinkMaker is under the [MIT License](LICENSE).

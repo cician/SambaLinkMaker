@@ -103,17 +103,6 @@ namespace SambaLinkMaker {
 		/// Add the share to this list. If for any reason there's already another
 		/// share for this local path, the new share replaces it.
 		/// </summary>
-		/// <param name="shareName">Name of the share to add.</param>
-		/// <param name="shareLocalPath">Local path of the share to add.</param>
-		public void AddOrReplace(string shareName, string shareLocalPath) {
-			Share share = new Share(shareName, shareLocalPath);
-			AddOrReplace(share);
-		}
-
-		/// <summary>
-		/// Add the share to this list. If for any reason there's already another
-		/// share for this local path, the new share replaces it.
-		/// </summary>
 		/// <param name="share">The share to add.</param>
 		public void AddOrReplace(Share share) {
 			if (!sharesByName.ContainsKey(share.Name))
@@ -134,24 +123,6 @@ namespace SambaLinkMaker {
 				treeElem = childElem;
 			}
 			treeElem.share = share;
-		}
-
-		/// <summary>
-		/// Find a share that allows access to this local path.
-		/// Note that it's possible for more than one share to match a specific path.
-		/// In such case the most specific share will be chosen.
-		/// For example if share A has local path /home/user and share B has local
-		/// path /home/user/downloads, for localPath='/home/user/downloads/file.mp4'
-		/// the method returns B.
-		/// </summary>
-		/// <returns>The parent share or null.</returns>
-		/// <param name="localPath">Local absolute path of a file or directory.
-		/// It doesn't necessarily need to exist, but needs to be a valid path.
-		/// It should be a plain path, not an URI or UNC path and shouldn't be
-		/// escaped in any way.
-		/// </param>
-		public Share FindParentShare(string localPath) {
-			return FindParentShare(new TokenizedLocalPath(localPath));
 		}
 
 		/// <summary>
