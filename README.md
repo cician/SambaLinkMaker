@@ -35,8 +35,8 @@ Then run
 For .tar.gz releases I'm using MonoDevelop's linux deployment feature.
 
 Regenerating the icons from SVGs:  
-`mogrify -path Resources -format ico -density 600 -define \`
-`icon:auto-resize=256,128,64,48,32,24,16 Resources/*.svg`
+`mogrify -path Resources -format ico -density 600 -define`
+` icon:auto-resize=256,128,64,48,32,24,16 Resources/*.svg`
 
 # OS integration
 ## Windows MSI installer.
