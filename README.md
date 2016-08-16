@@ -16,7 +16,7 @@ NuGet.
 Just grab the [latest binary release](../../releases/latest).
 I develop and test SambaLinkMaker only on [K]Ubuntu Linux only.
 You'll still need to install the mono runtime.  
-    sudo apt-get install mono-runtime
+    `sudo apt-get install mono-runtime`
 
 And of course the whole thing only makes sense if you have samba file sharing
 configured and running, but it's out of scope of this readme. To access the list
@@ -27,15 +27,15 @@ it's installed by default with samba.
 # Packaging
 To create windows .msi installer you need to install
 [wixl](https://wiki.gnome.org/msitools).  
-    sudo apt-get install wixl
+    `sudo apt-get install wixl`
 The run  
-    wixl --arch x64 -o SambaLinkMaker_x64.msi WindowsInstaller.wxs
+    `wixl --arch x64 -o SambaLinkMaker_x64.msi WindowsInstaller.wxs`
     
 For .tar.gz releases I'm using MonoDevelop's linux deployment feature.
 
 Regenerating the icons from SVGs:  
-    mogrify -path Resources -format ico -density 600 -define 
-    icon:auto-resize=256,128,64,48,32,24,16 Resources/*.svg
+    `mogrify -path Resources -format ico -density 600 -define 
+    icon:auto-resize=256,128,64,48,32,24,16 Resources/*.svg`
 
 # OS integration
 ## Windows MSI installer.
