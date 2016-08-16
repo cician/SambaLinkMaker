@@ -29,7 +29,7 @@ To create windows .msi installer you need to install
 [wixl](https://wiki.gnome.org/msitools).
     sudo apt-get install wixl
 The run
-    wixl WindowsInstaller.wxs
+    wixl --arch x64 -o SambaLinkMaker_x64.msi WindowsInstaller.wxs
     
 For .tar.gz releases I'm using MonoDevelop's linux deployment feature.
 
