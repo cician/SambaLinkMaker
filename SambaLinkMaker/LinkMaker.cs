@@ -93,7 +93,7 @@ namespace SambaLinkMaker {
 			} else {
 				Share share = shares.FindParentShare(localPath);
 				if (share != null) {
-					TokenizedLocalPath relPath = TokenizedLocalPath.MakeRelative(share.LocalPath, localPath);
+					TokenizedLocalPath relPath = TokenizedLocalPath.MakeRelative(share.LocalPath, localPath, shares.CaseSensitiveFileSystem);
 					return ComposeLink(linkFormat, host, share, relPath, systemSeparator);
 				} else {
 					return null;

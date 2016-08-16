@@ -337,9 +337,9 @@ guest ok = yes
 		}
 
 		[Test()]
-		public void FindShareShareSimple() {
+		public void FindShareSimple() {
 			var list = new SharesList();
-			list.AddOrReplace(new Share("testshare", UnixPath("/home/user/downloads")));
+			list.AddOrReplace(UnixShare("testshare", "/home/user/downloads"));
 			Assert.IsNotNull(list.FindParentShare(UnixPath("/home/user/downloads/test.txt")));
 		}
 
@@ -373,6 +373,22 @@ guest ok = yes
 			list.AddOrReplace(WindowsShare("testshare", "c:"));
 			Assert.IsNotNull(list.FindParentShare(WindowsPath("c:\\")));
 			Assert.IsNotNull(list.FindParentShare(WindowsPath("c:")));
+		}
+
+		[Test()]
+		public void FindShareCaseSensitive() {
+			var list = new SharesList(true);
+			list.AddOrReplace(UnixShare("testshare", "/home/user/downloads"));
+			Assert.IsNull(list.FindParentShare(UnixPath("/home/user/Downloads/test.txt")));
+			Assert.IsNotNull(list.FindParentShare(UnixPath("/home/user/downloads/test.txt")));
+		}
+
+		[Test()]
+		public void FindShareCaseInsensitive() {
+			var list = new SharesList(false);
+			list.AddOrReplace(WindowsShare("testshare", "c:\\downloads"));
+			Assert.IsNotNull(list.FindParentShare(WindowsPath("c:\\Downloads\\test.txt")));
+			Assert.IsNotNull(list.FindParentShare(WindowsPath("c:\\downloads\\test.txt")));
 		}
 
 		[Test()]
@@ -448,6 +464,14 @@ guest ok = yes
 				Assert.AreEqual(@"\\host\share2\test.txt", LinkMaker.MakeLink(LinkFormat.UncEscaped, "host", list, localPath, '/'));
 				Assert.AreEqual("smb://host/share2/test.txt", LinkMaker.MakeLink(LinkFormat.Smb, "host", list, localPath, '/'));
 			}
+		}
+
+		[Test()]
+		public void MakeLinkCaseInsensitive() {
+			var list = new SharesList(false);
+			list.AddOrReplace(WindowsShare("share", "c:\\downloads"));
+			Assert.AreEqual(@"\\host\share\test.txt", LinkMaker.MakeLink(LinkFormat.Unc, "host", list, WindowsPath(@"c:\Downloads\test.txt"), '\\'));
+			Assert.AreEqual(@"\\host\share\test.txt", LinkMaker.MakeLink(LinkFormat.Unc, "host", list, WindowsPath(@"c:\downloads\test.txt"), '\\'));
 		}
 	}
 }

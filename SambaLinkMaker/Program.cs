@@ -146,9 +146,30 @@ namespace SambaLinkMaker {
 				if (localPaths.Count < 1)
 					throw new InputError("local path not specified");
 
-				SharesList shares = new SharesList();
+				// Make the path searches case insensitive on Windows and
+				// case sensitive on anything else.
+				// This is inexact as on the same machine it's possible to have multiple
+				// file systems with different case sensitivity, but let's keep things
+				// simple. In worst case the link won't be created.
+				bool caseSensitiveFileSystem;
+				switch (Environment.OSVersion.Platform) {
+					case PlatformID.Win32NT:
+						caseSensitiveFileSystem = false;
+						break;
+					case PlatformID.Win32Windows:
+						caseSensitiveFileSystem = false;
+						break;
+					case PlatformID.WinCE:
+						caseSensitiveFileSystem = false;
+						break;
+					default:
+						caseSensitiveFileSystem = true;
+						break;
+				}
+
+				SharesList shares = new SharesList(caseSensitiveFileSystem);
+
 				if (sharesfile == null) {
-					// TODO windows?
 					switch (Environment.OSVersion.Platform) {
 						case PlatformID.Unix:
 							// Load the samba shares.

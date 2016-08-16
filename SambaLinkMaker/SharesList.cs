@@ -40,8 +40,6 @@ namespace SambaLinkMaker {
 		/// </summary>
 		private ShareTreeEntry treeRoot = new ShareTreeEntry("");
 
-		//private ShareTreeEntry treeRootCaseInsensirive = new ShareTreeEntry("");
-
 		/// <summary>
 		/// The support structure for the share tree.
 		/// </summary>
@@ -58,22 +56,27 @@ namespace SambaLinkMaker {
 			}
 		}
 
-		// TODO decide how to handle case sensitivity, since in theory one can set
-		// it per share... Probably should maintain two trees. For now only handling
-		// case sensitive searches, since it's default for samba. If we want to support
-		// windows then it becomes much more important.
-//		/// <summary>
-//		/// Should the searches be case-sensitive?. Set to false on Windows.
-//		/// </summary>
-//		private bool caseSensitive;
+		/// <summary>
+		/// Should the searches be case-sensitive? Used when matching share's local
+		/// path to file paths.
+		/// </summary>
+		/// 
+		/// <remarks>
+		/// In theory it may depend on per file-system basis on
+		/// the same machine. In practice this is a simplification an should be
+		/// set to true on 'Nix systems and false on Windows.
+		/// </remarks>
+		private bool caseSensitiveFileSystem;
+
+		public bool CaseSensitiveFileSystem { get { return caseSensitiveFileSystem; } }
 
 		/// <summary>
 		/// Initializes a new empty SharesList.
 		/// </summary>
 		/// <param name="caseSensitive">If set to <c>true</c> case sensitive.</param>
-		public SharesList(/*bool caseSensitive = true*/) {
+		public SharesList(bool caseSensitiveFileSystem = true) {
 			this.sharesByName = new SortedDictionary<string, Share>();
-//			this.caseSensitive = caseSensitive;
+			this.caseSensitiveFileSystem = caseSensitiveFileSystem;
 		}
 
 		/// <summary>
@@ -112,12 +115,14 @@ namespace SambaLinkMaker {
 			TokenizedLocalPath path = share.LocalPath;
 			ShareTreeEntry treeElem = treeRoot; 
 			foreach (string elem in share.LocalPath) {
+				string elemCased = caseSensitiveFileSystem ? elem : elem.ToLowerInvariant();
+
 				ShareTreeEntry childElem = null;
-				treeElem.children.TryGetValue(elem, out childElem);
+				treeElem.children.TryGetValue(elemCased, out childElem);
 
 				if (childElem == null) {
 					childElem = new ShareTreeEntry(elem);
-					treeElem.children.Add(elem, childElem);
+					treeElem.children.Add(elemCased, childElem);
 				}
 
 				treeElem = childElem;
@@ -144,8 +149,10 @@ namespace SambaLinkMaker {
 
 			ShareTreeEntry treeElem = treeRoot;
 			foreach (string elem in localPath) {
+				string elemCased = caseSensitiveFileSystem ? elem : elem.ToLowerInvariant();
+
 				ShareTreeEntry childElem = null;
-				treeElem.children.TryGetValue(elem, out childElem);
+				treeElem.children.TryGetValue(elemCased, out childElem);
 
 				if (childElem != null) {
 					if (childElem.share != null) {

@@ -74,6 +74,9 @@ namespace SambaLinkMaker {
 		}
 
 		public static void ParseSmbConfShareList(SharesList dstList, string smbConfContent) {
+			// note: some smb.conffeatures are not handled. Like special variables and includes.
+			// TODO special case for [homes] share
+
 			var parser = new IniDataParser();
 			parser.Configuration.CommentRegex = new System.Text.RegularExpressions.Regex(@"^[#;](.*)");
 			var iniData = parser.Parse(smbConfContent);
@@ -87,6 +90,7 @@ namespace SambaLinkMaker {
 					throw new Exception(String.Format("share {0} doesn't have local path specified", shareName));
 
 				string shareLocalPath = shareIniSection.Keys["path"];
+
 				dstList.AddOrReplace(new Share(shareName, new TokenizedLocalPath(shareLocalPath, '/')));
 			}
 		}

@@ -110,13 +110,16 @@ namespace SambaLinkMaker {
 			return new TokenizedLocalPath(newElems);
 		}
 
-		public static TokenizedLocalPath MakeRelative(TokenizedLocalPath parentPath, TokenizedLocalPath childPath) {
+		public static TokenizedLocalPath MakeRelative(TokenizedLocalPath parentPath, TokenizedLocalPath childPath, bool caseSensitiveFileSystem) {
 			string[] parentElems = parentPath.pathElements;
 			string[] childElems = childPath.pathElements;
 
 			// Check if the child path is really relative to parent.
+			StringComparison comparision = caseSensitiveFileSystem ? StringComparison.InvariantCulture : StringComparison.InvariantCultureIgnoreCase;
 			for (int i = 0; i < parentElems.Length; i++) {
-				if (parentElems[i] != childElems[i])
+				string e1 = parentElems[i];
+				string e2 = childElems[i];
+				if (!string.Equals(e1, e2, comparision))
 					throw new ArgumentException(string.Format("child path {0} is not relative to parent {1}", childPath.ToString(), parentPath.ToString()));
 			}
 
