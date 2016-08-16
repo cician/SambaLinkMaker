@@ -67,4 +67,10 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="SambaLinkMakerKDEServiceMenu.desktop">
+      <DeployService-TargetDirectoryId>Linux.DesktopApplications</DeployService-TargetDirectoryId>
+      <DeployService-Deploy>True</DeployService-Deploy>
+    </Content>
+  </ItemGroup>
 </Project>

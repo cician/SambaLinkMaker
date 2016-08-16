@@ -7,7 +7,21 @@
       <Packages>
         <Package name="Linux Binaries">
           <Builder targetFile="SambaLinkMaker.tar.gz" platform="Linux" configuration="Debug|x86" ctype="BinariesZipPackageBuilder">
+            <ExcludedFiles>
+              <File>SambaLinkMaker,Linux.DesktopApplications,SambaLinkMakerKDEServiceMenu.desktop</File>
+            </ExcludedFiles>
             <RootEntry path="SambaLinkMaker\SambaLinkMaker.csproj" />
+          </Builder>
+        </Package>
+        <Package name="KDE Service Menu With Binaries">
+          <Builder targetFile="SambaLinkMakerKDEServiceMenu.tar.gz" platform="Linux" configuration="Release|x86" ctype="BinariesZipPackageBuilder">
+            <ChildEntries>
+              <SolutionItemReference path="SambaLinkMaker\SambaLinkMaker.csproj" />
+            </ChildEntries>
+            <ExcludedFiles>
+              <File>SambaLinkMaker,Binaries,sambalinkmaker</File>
+            </ExcludedFiles>
+            <RootEntry path="SambaLinkMaker.sln" id=":root:" />
           </Builder>
         </Package>
       </Packages>

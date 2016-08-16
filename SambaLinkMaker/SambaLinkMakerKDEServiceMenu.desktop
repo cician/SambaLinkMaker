@@ -1,0 +1,35 @@
+[Desktop Entry]
+Type=Service
+ServiceTypes=KonqPopupMenu/Plugin
+MimeType=all/all
+Actions=copysmblink;copyunclink;copylocalpath;copylocaluri;
+# check if the executable is found
+#TryExec=mono  `kf5-config --path services --locate ServiceMenus/SambaLinkMaker/SambaLinkMaker.exe` --version
+X-KDE-Priority=TopLevel
+X-KDE-Submenu=Copy Link
+X-KDE-StartupNotify=false
+Icon=edit-copy
+#Icon=edit-link
+
+# note: if --copy turns out unreliable append "| xsel -b -i" to all commands
+
+[Desktop Action copylocalpath]
+Name=Copy local path to clipboard.
+Exec=mono `kf5-config --path services --locate ServiceMenus/SambaLinkMaker/SambaLinkMaker.exe` --copy --nostderr --format=localpath %F
+Icon=edit-copy
+
+[Desktop Action copylocaluri]
+Name=Copy local file:// URI to clipboard.
+Exec=mono `kf5-config --path services --locate ServiceMenus/SambaLinkMaker/SambaLinkMaker.exe` --copy --nostderr --format=localfile %F
+Icon=edit-copy
+
+[Desktop Action copyunclink]
+Name=Copy Windows UNC link to clipboard.
+Exec=mono `kf5-config --path services --locate ServiceMenus/SambaLinkMaker/SambaLinkMaker.exe` --copy --nostderr --format=unc %F
+Icon=edit-copy
+
+[Desktop Action copysmblink]
+Name=Copy smb:// link to clipboard.
+Exec=mono `kf5-config --path services --locate ServiceMenus/SambaLinkMaker/SambaLinkMaker.exe` --copy --nostderr --format=smb %
+Icon=edit-copy
+Exec=sambalinkmaker

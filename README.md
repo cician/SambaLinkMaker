@@ -47,5 +47,11 @@ of an overkill. Another option would be to include
 - Copying a drive path results in wrong link. This seems a windows bug to me.
 Only tested on 64 bit Windows 7.
 
+## KDE Dolphin Service Menu
+First build the service menu package from MonoDevelop. Then extract the
+resulting package into ~/.local/share/kservices5/ServiceMenus/ or other path,
+depending on your distro. If unsure use `kf5-config --path services` or
+`kde4-config --path services` command.
+
 # Licensing
 SambaLinkMaker is under the [MIT License](LICENSE).
