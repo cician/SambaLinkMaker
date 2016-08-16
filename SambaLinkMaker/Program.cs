@@ -89,6 +89,7 @@ namespace SambaLinkMaker {
 			string host = null;
 			string sharesfile = null;
 			bool showHelp = false;
+			bool showVersion = false;
 			LinkFormat linkFormat = LinkFormat.Unc;
 			HostType hostType = HostType.Netbios;
 
@@ -118,6 +119,8 @@ namespace SambaLinkMaker {
 					v => noStdErr = v != null },
 				{ "copy",  "Copy the result to clipboard instead of standard output.", 
 					v => copyToClipboard = v != null },
+				{ "version",  "Print version and exit.", 
+					v => showVersion = v != null },
 			};
 
 			try {
@@ -143,142 +146,149 @@ namespace SambaLinkMaker {
 					}
 				}
 
-				if (localPaths.Count < 1)
-					throw new InputError("local path not specified");
+				if (showVersion) {
+					Console.WriteLine(System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.ToString());
+					exitCode = 0;
+				} else if (showHelp) {
+					exitCode = 0;
+				} else {
+					if (localPaths.Count < 1)
+						throw new InputError("local path not specified");
 
-				// Make the path searches case insensitive on Windows and
-				// case sensitive on anything else.
-				// This is inexact as on the same machine it's possible to have multiple
-				// file systems with different case sensitivity, but let's keep things
-				// simple. In worst case the link won't be created.
-				bool caseSensitiveFileSystem;
-				switch (Environment.OSVersion.Platform) {
-					case PlatformID.Win32NT:
-						caseSensitiveFileSystem = false;
-						break;
-					case PlatformID.Win32Windows:
-						caseSensitiveFileSystem = false;
-						break;
-					case PlatformID.WinCE:
-						caseSensitiveFileSystem = false;
-						break;
-					default:
-						caseSensitiveFileSystem = true;
-						break;
-				}
-
-				SharesList shares = new SharesList(caseSensitiveFileSystem);
-
-				if (sharesfile == null) {
+					// Make the path searches case insensitive on Windows and
+					// case sensitive on anything else.
+					// This is inexact as on the same machine it's possible to have multiple
+					// file systems with different case sensitivity, but let's keep things
+					// simple. In worst case the link won't be created.
+					bool caseSensitiveFileSystem;
 					switch (Environment.OSVersion.Platform) {
-						case PlatformID.Unix:
-							// Load the samba shares.
-							SambaShareLoader.LoadUserShares(shares);
-							SambaShareLoader.LoadGlobalSambaShares(shares);
-							break;
-//						case PlatformID.MacOSX:
 						case PlatformID.Win32NT:
-							WindowsShareLoader.LoadGlobalShares(shares);
+							caseSensitiveFileSystem = false;
 							break;
-						case PlatformID.Win32Windows: // will it work?
-							WindowsShareLoader.LoadGlobalShares(shares);
+						case PlatformID.Win32Windows:
+							caseSensitiveFileSystem = false;
 							break;
-						case PlatformID.WinCE: // will it work?
-							WindowsShareLoader.LoadGlobalShares(shares);
+						case PlatformID.WinCE:
+							caseSensitiveFileSystem = false;
 							break;
 						default:
-							throw new Exception(string.Format("Unknown platform {0}. Could not get LAN shares from the system.", Environment.OSVersion.Platform));
+							caseSensitiveFileSystem = true;
+							break;
 					}
-				} else {
-					// For the custom share list we use the same format as the "net usershare info" command.
-					string shareListIniContent = File.ReadAllText(sharesfile, Encoding.UTF8);
-					SambaShareLoader.ParseNetUserShareList(shares, shareListIniContent);
-				}
 
-				if (host == null) {
-					if (hostType == HostType.Ip || hostType == HostType.Ip6) {
-						host = FindIPAddress(hostType == HostType.Ip6);
-					} else if (hostType == HostType.Netbios) {
-						host = System.Environment.MachineName;
-					} else if (hostType == HostType.Hostname) {
-						host = Dns.GetHostName();
+					SharesList shares = new SharesList(caseSensitiveFileSystem);
+
+					if (sharesfile == null) {
+						switch (Environment.OSVersion.Platform) {
+							case PlatformID.Unix:
+								// Load the samba shares.
+								SambaShareLoader.LoadUserShares(shares);
+								SambaShareLoader.LoadGlobalSambaShares(shares);
+								break;
+						//						case PlatformID.MacOSX:
+							case PlatformID.Win32NT:
+								WindowsShareLoader.LoadGlobalShares(shares);
+								break;
+							case PlatformID.Win32Windows: // will it work?
+								WindowsShareLoader.LoadGlobalShares(shares);
+								break;
+							case PlatformID.WinCE: // will it work?
+								WindowsShareLoader.LoadGlobalShares(shares);
+								break;
+							default:
+								throw new Exception(string.Format("Unknown platform {0}. Could not get LAN shares from the system.", Environment.OSVersion.Platform));
+						}
 					} else {
-						throw new InputError(String.Format("unexpected host-type option: {0}", hostType));
-					}
-				}
-
-				/*
-				 * Small note on complexity. For now the complexity is exponential.
-				 * As long as there aren't many shares AND many paths to convert it
-				 * shouldn't matter much. Otherwise a better solution is needed with
-				 * some data structure. For example searching in a sorted list of
-				 * shares using binary search.
-				 * 
-				 * Could implement a binary search on SortedList<string,string> or
-				 * use a ready made class prefixdictionary/trie.
-				 */
-
-				bool first = true;
-				bool foundAll = true;
-				foreach (string localPath in localPaths) {
-					if (first) {
-						first = false;
-					} else {
-						output.WriteLine();
+						// For the custom share list we use the same format as the "net usershare info" command.
+						string shareListIniContent = File.ReadAllText(sharesfile, Encoding.UTF8);
+						SambaShareLoader.ParseNetUserShareList(shares, shareListIniContent);
 					}
 
-					string link = null;
+					if (host == null) {
+						if (hostType == HostType.Ip || hostType == HostType.Ip6) {
+							host = FindIPAddress(hostType == HostType.Ip6);
+						} else if (hostType == HostType.Netbios) {
+							host = System.Environment.MachineName;
+						} else if (hostType == HostType.Hostname) {
+							host = Dns.GetHostName();
+						} else {
+							throw new InputError(String.Format("unexpected host-type option: {0}", hostType));
+						}
+					}
 
-					TokenizedLocalPath tokenizedLocalPath = null;
-					try {
-						// Do some sanity checks and make the path absolute.
-						string localAbsolutePath;
-						{
-//							Uri uri = null;
-//							if (Uri.TryCreate(localPath, UriKind.RelativeOrAbsolute, out uri)) {
-//								if (!uri.IsFile)
-//									throw new ArgumentException(string.Format("Could not resolve path {0} to URI. Only file/directory paths are supported.", localPath));
-//
-//								// Specific case for URIs like file://host/..., but I haven't seen them in the wild.
-//								if (uri.Host != null && uri.Host != "")
-//									throw new ArgumentException(string.Format("Could not resolve path {0} to URI. Only file/directory paths are supported.", localPath));
-//
-//								// replace the path with the absolute one taken from the URI
-//								localAbsolutePath = uri.LocalPath;
-//							} else {
-								// use the passed path as-is
-								localAbsolutePath = localPath;
-//							}
+					/*
+					 * Small note on complexity. For now the complexity is exponential.
+					 * As long as there aren't many shares AND many paths to convert it
+					 * shouldn't matter much. Otherwise a better solution is needed with
+					 * some data structure. For example searching in a sorted list of
+					 * shares using binary search.
+					 * 
+					 * Could implement a binary search on SortedList<string,string> or
+					 * use a ready made class prefixdictionary/trie.
+					 */
+
+					bool first = true;
+					bool foundAll = true;
+					foreach (string localPath in localPaths) {
+						if (first) {
+							first = false;
+						} else {
+							output.WriteLine();
 						}
 
-						tokenizedLocalPath = new TokenizedLocalPath(localAbsolutePath, Path.DirectorySeparatorChar);
-					} catch (Exception ex) {
-						Console.Error.WriteLine(ex.ToString());
+						string link = null;
+
+						TokenizedLocalPath tokenizedLocalPath = null;
+						try {
+							// Do some sanity checks and make the path absolute.
+							string localAbsolutePath;
+							{
+								//							Uri uri = null;
+								//							if (Uri.TryCreate(localPath, UriKind.RelativeOrAbsolute, out uri)) {
+								//								if (!uri.IsFile)
+								//									throw new ArgumentException(string.Format("Could not resolve path {0} to URI. Only file/directory paths are supported.", localPath));
+								//
+								//								// Specific case for URIs like file://host/..., but I haven't seen them in the wild.
+								//								if (uri.Host != null && uri.Host != "")
+								//									throw new ArgumentException(string.Format("Could not resolve path {0} to URI. Only file/directory paths are supported.", localPath));
+								//
+								//								// replace the path with the absolute one taken from the URI
+								//								localAbsolutePath = uri.LocalPath;
+								//							} else {
+								// use the passed path as-is
+								localAbsolutePath = localPath;
+								//							}
+							}
+
+							tokenizedLocalPath = new TokenizedLocalPath(localAbsolutePath, Path.DirectorySeparatorChar);
+						} catch (Exception ex) {
+							Console.Error.WriteLine(ex.ToString());
+						}
+
+						if (tokenizedLocalPath != null) {
+							link = LinkMaker.MakeLink(linkFormat, host, shares, tokenizedLocalPath, Path.DirectorySeparatorChar);
+						} else {
+							link = localPath;
+						}
+
+						if (link != null) {
+							output.Write(link);
+						} else {
+							Console.Error.WriteLine(string.Format("No share found containing local path \"{0}\"", localPath));
+							output.Write(localPath);
+							foundAll = false;
+						}
 					}
 
-					if (tokenizedLocalPath != null) {
-						link = LinkMaker.MakeLink(linkFormat, host, shares, tokenizedLocalPath, Path.DirectorySeparatorChar);
-					} else {
-						link = localPath;
+					if (copyToClipboard) {
+						string text = outputSW.ToString();
+						ClipboardHelper.CopyText(text);
 					}
 
-					if (link != null) {
-						output.Write(link);
-					} else {
-						Console.Error.WriteLine(string.Format("No share found containing local path \"{0}\"", localPath));
-						output.Write(localPath);
-						foundAll = false;
+					if (foundAll) {
+						// OK. If we reached this point then everything went O~K.
+						exitCode = 0;
 					}
-				}
-
-				if (copyToClipboard) {
-					string text = outputSW.ToString();
-					ClipboardHelper.CopyText(text);
-				}
-
-				if (foundAll) {
-					// OK. If we reached this point then everything went O~K.
-					exitCode = 0;
 				}
 			} catch (InputError e) {
 				Console.Error.WriteLine(e.Message);
