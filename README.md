@@ -43,7 +43,7 @@ it's fairy limited, but works. Know issues/limits:
 - Only accepts one file or directory at a time. Overcoming this limitation
 requires writing a shell extension. I know there's sharp shell, but seemes a bit
 of an overkill. Another option would be to include
-(this little program)[https://github.com/zenden2k/context-menu-launcher]
+[this little program](https://github.com/zenden2k/context-menu-launcher)
 - Copying a drive path results in wrong link. This seems a windows bug to me.
 Only tested on 64 bit Windows 7.
 
